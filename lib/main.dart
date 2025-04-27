@@ -1,95 +1,175 @@
-import 'package:flutter_proyect_1/widgets/CalcButton.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:math_expressions/math_expressions.dart';
-import 'package:date_field/date_field.dart';
+import 'package:intl/intl.dart'; // Para formatear fechas
 
-void main() {
-  runApp(const CalcApp());
-}
+void main() => runApp(const MyApp());
 
-class CalcApp extends StatelessWidget {
-  const CalcApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Proy 1. Articulo 204 Ley CSS',
-          ),
-        ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Text("Salario Minimo promedio = B/340.00 al mes "
-                "\n60% del salario = B/204.00", textAlign: ,
-                style: TextStyle(fontSize: 20)),
-            Text("Fecha Afiliacion", style: TextStyle(fontSize: 24)),
-            SizedBox(width: 300, child:  DatePickerField()),
-            Text("Fecha Defuncion",style: TextStyle(fontSize: 24)),
-            SizedBox(width: 300, child: const DatePickerField()),
-            const SizedBox(child: "",)
-            TextButton(onPressed: (){
+        title: 'Formulario con Date Pickers',
+        home: DateForm(
 
-
-            }, child: const Text(
-              "Calcular Acumulado"
-            ))
-          ],
-        ),
-
-      ),
-    );
+        ));
   }
 }
 
-//class Calculo
-
-class DatePickerField extends StatefulWidget {
-  const DatePickerField({super.key});
-
+class DateForm extends StatefulWidget {
   @override
-  _DatePickerFieldState createState() => _DatePickerFieldState();
+  _DateFormState createState() => _DateFormState();
 }
 
-class _DatePickerFieldState extends State<DatePickerField> {
-  DateTime? _selectedDate;
-  final TextEditingController _dateController = TextEditingController();
-
-  Future<void> _selectDate(BuildContext context) async {
+class _DateFormState extends State<DateForm> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _startDateController = TextEditingController();
+  final TextEditingController _endDateController = TextEditingController();
+  DateTime? _startDate;
+  DateTime? _endDate;
+  int _difference = 0;
+  double _acumulado = 0;
+  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2030),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
     );
 
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null) {
       setState(() {
-        _selectedDate = picked;
-        _dateController.text = "${picked.day}/${picked.month}/${picked.year}";
+        if (isStartDate) {
+          _startDate = picked;
+          _startDateController.text = DateFormat('dd/MM/yyyy').format(picked);
+        } else {
+          _endDate = picked;
+          _endDateController.text = DateFormat('dd/MM/yyyy').format(picked);
+        }
+
+        if (_startDate != null && _endDate != null) {
+          _difference = _endDate!.difference(_startDate!).inDays ~/ 30;
+          _acumulado = _difference * 204;
+        }
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: TextFormField(
-        controller: _dateController,
-        decoration: InputDecoration(
-          labelText: 'Selecciona una fecha',
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.calendar_today),
-            onPressed: () => _selectDate(context),
+    return Scaffold(
+      appBar: AppBar(title: const Text('Proyecto 1: Articulo 204')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Text('Desarrollo de Software\nProyecto 1'
+                  '\nHerramienta: Flutter\nAdriana Solanilla'
+                  '\n Andrea Carrera',style: TextStyle(fontSize: 20),textAlign: TextAlign.center),
+              const SizedBox(height: 20),
+              Container(
+                margin: const EdgeInsets.all(10.0),
+                width: 1000,
+                height: 100,
+                padding: EdgeInsets.all(2),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255),
+                  borderRadius: BorderRadius.circular(5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromARGB(5, 0, 30, 100),
+
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: const Offset(0, 3), // changes position of shadow
+                    ),
+                  ],
+                ),
+                child: Text("Salario Mensual = B/340.00"
+                    "\n60% del salario = B/204.00",
+                    style: TextStyle(fontSize: 16)),
+
+              ),
+
+              // Campo Fecha Inicio
+              TextFormField(
+                controller: _startDateController,
+                decoration: InputDecoration(
+                  labelText: 'Fecha de Afiliacion',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () => _selectDate(context, true),
+                  ),
+                ),
+                readOnly: true,
+                onTap: () => _selectDate(context, true),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor seleccione una fecha';
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              // Campo Fecha Fin
+              TextFormField(
+                controller: _endDateController,
+                decoration: InputDecoration(
+                  labelText: 'Fecha de Defuncion',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () => _selectDate(context, false),
+                  ),
+                ),
+                readOnly: true,
+                onTap: () => _selectDate(context, false),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor seleccione una fecha';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              Container(
+                margin: const EdgeInsets.all(10.0),
+                width: 300,
+                height: 50,
+                padding: EdgeInsets.all(2),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255),
+                  borderRadius: BorderRadius.circular(5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromARGB(50, 0, 30, 100),
+
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: const Offset(0, 3), // changes position of shadow
+                    ),
+                  ],
+                ),
+                child: Text('Monto acumulado: B/$_acumulado'),
+              ),
+
+              const SizedBox(height: 30),
+            ],
           ),
         ),
-        readOnly: true, // Evita que el teclado aparezca al tocar
-        onTap: () => _selectDate(context),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _startDateController.dispose();
+    _endDateController.dispose();
+    super.dispose();
   }
 }
